@@ -1,6 +1,8 @@
 <?php
 class Connections extends MY_Controller
 {
+	protected $module_site;
+
     function __construct()
     {
         parent::__construct();
@@ -8,6 +10,8 @@ class Connections extends MY_Controller
 		if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 	
 		$this->load->library('twitter');
+		
+		$this->module_site = $this->social_igniter->get_site_view('module', 'twitter');
 	}
 
 	function index()
@@ -95,6 +99,7 @@ class Connections extends MY_Controller
 
 		        		// Snatch Twitter Image
 						$this->image_model->get_external_image($image_full, $image_save);		        	
+
 		        		// Process Thumbnail Images Now
 						$image_size 	= getimagesize($image_save);
 						$image_width 	= $image_size[0];
@@ -112,6 +117,7 @@ class Connections extends MY_Controller
 	       		}
 	       		
 	       		$connection_data = array(
+	       			'site_id'				=> $this->module_site[0]->site_id,
 	       			'user_id'				=> $user_id,
 	       			'module'				=> 'twitter',
 	       			'type'					=> 'primary',
@@ -135,11 +141,10 @@ class Connections extends MY_Controller
 		{
 			redirect('connections/twitter', 'refresh');
 		}
-				
 	}
 
 	function add()
-	{
+	{		
 		if (!$this->social_auth->logged_in()) redirect('connections/twitter');
 
 		$tokens['access_token'] 		= NULL;
@@ -165,9 +170,10 @@ class Connections extends MY_Controller
 				$twitter_user = $this->twitter->call('account/verify_credentials');
 				
 	       		$connection_data = array(
+	       			'site_id'				=> $this->module_site[0]->site_id,
 	       			'user_id'				=> $this->session->userdata('user_id'),
 	       			'module'				=> 'twitter',
-	       			'type'					=> 'primary',	// AT A LATER TIME ALLOW ADDING MORE THAN ONE TWITTER ACCOUNT
+	       			'type'					=> 'primary',
 	       			'connection_user_id'	=> $twitter_user->id,
 	       			'connection_username'	=> $twitter_user->screen_name,
 	       			'auth_one'				=> $auth['access_token'],
@@ -192,8 +198,7 @@ class Connections extends MY_Controller
 		else
 		{
 			redirect('connections/twitter/add', 'refresh');		
-		}
-	
+		}	
 	}
 
 }
