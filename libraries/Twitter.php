@@ -930,6 +930,7 @@ class EpiOAuthResponse
   }
 }
 
+
 class EpiOAuthException extends Exception
 {
   public static function raise($response, $debug)

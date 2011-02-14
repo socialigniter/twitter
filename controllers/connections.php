@@ -185,6 +185,8 @@ class Connections extends MY_Controller
 				
 				if($connection)
 				{
+					$this->social_auth->set_userdata_connections($this->session->userdata('user_id'));
+				
 					$this->session->set_flashdata('message', "Twitter account connected");
 				 	redirect('settings/connections', 'refresh');
 				}
