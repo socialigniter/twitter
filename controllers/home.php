@@ -11,17 +11,22 @@ class Home extends Dashboard_Controller
 		$this->load->helper('twitter');
 		   
 		$this->data['page_title'] 	= 'Twitter';
-		$this->check_connection 	= $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
+
+		$this->check_connection = $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
 	}	
 	
 	function timeline()
 	{
+		// No Connection
+		if (!$this->check_connection) redirect(base_url().'home/twitter/connect', 'refresh');	
+		
+		// Grant Auth
 		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->auth_one, $this->check_connection->auth_two);									
 
  		$timeline		= NULL;
 		$timeline_view	= NULL;
  	
- 		// Pick Type of Feed
+ 		// Type of Feed
 		if ($this->uri->segment(3) == 'timeline')
 		{
 			$timeline 					= $this->twitter->call('statuses/friends_timeline'); 	   
@@ -85,22 +90,23 @@ class Home extends Dashboard_Controller
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
 	}
+	
+	function connect()
+	{
+ 	   	$this->data['sub_title'] = "Connect";
+		$this->render();
+	}
  
  	function post_to_social()
  	{
- 	
-	    if (($this->config->item('twitter')) && ($this->input->post('post_to_twitter') == 1))
+	    if ((config_item('twitter_social_post') == 'TRUE') && ($this->input->post('post_to_twitter') == 1))
     	{
-			$check_connection = $this->connections_model->check_connection_user($this->session->userdata('user_id'), 'twitter');
-
-			if ($check_connection)
+			if ($this->check_connection)
 			{
-				$auth = $this->twitter->oauth($this->config->item('twitter_consumer_key'), $this->config->item('twitter_consumer_key_secret'), $check_connection->token_one, $check_connection->token_two);									
-			}	
-
-			$this->twitter->call('statuses/update', array('status' => $this->input->post('update')));
+				$auth 	= $this->twitter->oauth($this->config->item('twitter_consumer_key'), $this->config->item('twitter_consumer_key_secret'), $check_connection->token_one, $check_connection->token_two);									
+				$post	= $this->twitter->call('statuses/update', array('status' => $this->input->post('update')));
+			}
     	}
 	}
-	
 	
 }
