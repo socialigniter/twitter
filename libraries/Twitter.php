@@ -67,13 +67,15 @@ class Twitter {
 		$this->_conn->auth($username, $password);
 	}
 
-	public function oauth($consumer_key, $consumer_secret, $access_token=NULL, $access_token_secret=NULL, $return_url)
+	public function oauth($consumer_key, $consumer_secret, $access_token=NULL, $access_token_secret=NULL, $return_url=NULL)
 	{
 		$this->deauth();
 		$this->oauth = new EpiTwitter($consumer_key, $consumer_secret, $access_token, $access_token_secret);
 		$this->oauth->setToken($access_token, $access_token_secret);
 
-		if ( $access_token === NULL && $access_token_secret === NULL && !isset($_GET['oauth_token']))
+		
+
+		if ($access_token === NULL && $access_token_secret === NULL && !isset($_GET['oauth_token']))
 		{
 			$url = $this->oauth->getAuthenticateUrl(NULL, array('oauth_callback'=> $return_url));						
 			header('Location: '.$url);

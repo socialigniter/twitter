@@ -8,81 +8,89 @@ class Home extends Dashboard_Controller
         if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 
 		$this->load->library('twitter');
+		$this->load->helper('twitter');
 		   
 		$this->data['page_title'] 	= 'Twitter';
-		$this->check_connection 	= $this->connections_model->check_connection_user($this->session->userdata('user_id'), 'twitter');
+		$this->check_connection 	= $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
 	}	
 	
-	function index()
+	function timeline()
 	{
-		$user_connections = $this->connections_model->get_user_connections_array($this->session->userdata('user_id'));
+		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->auth_one, $this->check_connection->auth_two);									
 
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->token_one, $this->check_connection->token_two);									
-		$user_timeline = $this->twitter->call('statuses/friends_timeline'); 	   
+ 		$timeline		= NULL;
+		$timeline_view	= NULL;
+ 	
+ 		// Pick Type of Feed
+		if ($this->uri->segment(3) == 'timeline')
+		{
+			$timeline 					= $this->twitter->call('statuses/friends_timeline'); 	   
+ 	   		$this->data['sub_title'] 	= "Timeline";
+ 	   	}
+		elseif ($this->uri->segment(3) == 'mentions')
+		{
+			$timeline 					= $this->twitter->call('statuses/mentions');
+	 	    $this->data['sub_title'] 	= "@ Replies";		
+		}
+		elseif ($this->uri->segment(3) == 'direct_messages')
+		{
+			$timeline 						= $this->twitter->call('direct_messages');
+	 	    $this->data['sub_title'] 		= "Direct Messages";		
+		}
+		elseif ($this->uri->segment(3) == 'favorites')		
+		{
+			$timeline 						= $this->twitter->call('favorites');
+	 	    $this->data['sub_title'] 		= "Favorites";		
+		}
 
- 	    $this->data['sub_title'] 			= "Home";
-
-		$this->data['timeline'] 			= $user_timeline;
-
- 	    $this->data['status_header'] 		= 'Whats Happening';
-		$this->data['status_update']		= '';
-		$this->data['post_to_social']		= $this->social_igniter->post_to_social($this->session->userdata('user_id'), $user_connections);
-
-		$this->data['reply_to_status_id'] 	= $this->input->post('reply_to_status_id');
-		$this->data['reply_to_user_id']		= $this->input->post('reply_to_user_id');
-		$this->data['reply_to_username'] 	= $this->input->post('reply_to_username');
-
-		$this->data['geo_locate']			= $this->session->userdata('geo_enabled');
-		$this->data['geo_lat'] 				= $this->input->post('geo_lat');
-		$this->data['geo_long'] 			= $this->input->post('geo_long');
-		$this->data['geo_accuracy'] 		= $this->input->post('geo_accuracy');
-
-		$this->data['status_updater']	= $this->load->view(config_item('dashboard_theme').'/partials/status_updater', $this->data, true);
+		// Build Feed				 			
+		if (!empty($timeline))
+		{
+			foreach ($timeline as $tweet)
+			{
+				// Item
+				$this->data['item_id']				= $tweet->id;
+				$this->data['item_type']			= 'tweet';
 				
+				// Contributor
+				$this->data['item_user_id']			= $tweet->user->id;
+				$this->data['item_avatar']			= $tweet->user->profile_image_url;
+				$this->data['item_contributor']		= $tweet->user->name;
+				$this->data['item_profile']			= 'http://twitter.com/'.$tweet->user->screen_name;
+				
+				// Activity
+				$this->data['item_content']			= item_linkify($tweet->text);
+				$this->data['item_content_id']		= $tweet->id;
+				$this->data['item_date']			= twitter_time_format($tweet->created_at);			
+
+		 		// Actions
+			 	$this->data['item_comment']			= base_url().'comment/item/'.$tweet->id;
+			 	$this->data['item_comment_avatar']	= $this->data['logged_image'];
+			 	
+			 	$this->data['item_can_modify']		= FALSE; //$this->social_tools->has_access_to_modify('activity', $tweet, $this->session->userdata('user_id'), $this->session->userdata('user_level_id'));
+				$this->data['item_edit']			= ''; //base_url().'home/'.$tweet->module.'/manage/'.$tweet->content_id;
+				$this->data['item_delete']			= ''; //base_url().'api/activity/destroy/id/'.$tweet->activity_id;
+
+				// View
+				$timeline_view .= $this->load->view(config_item('dashboard_theme').'/partials/item_timeline.php', $this->data, true);
+	 		}
+	 	}
+	 	else
+	 	{
+	 		$timeline_view = '<li><p>No tweets to show from anyone</p></li>';
+ 		}
+ 		
+	 	$this->data['social_post'] 		= $this->social_igniter->get_social_post('<ul class="social_post">', '</ul>');
+		$this->data['status_updater']	= $this->load->view(config_item('dashboard_theme').'/partials/status_updater', $this->data, true);
+		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
 	}
-	
- 	function replies()
- 	{	
- 		$this->load->library('twitter');
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->token_one, $this->check_connection->token_two);									
-		$user_timeline = $this->twitter->call('statuses/mentions');
-      	   
- 	    $this->data['sub_title'] 		= "@ Replies";
-		$this->data['timeline'] 		= $user_timeline;
-		
-		$this->render();
- 	}  
-    
- 	function direct_messages()
- 	{
-		$this->load->library('twitter');	
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->token_one, $this->check_connection->token_two);									
-		$user_timeline = $this->twitter->call('direct_messages');
-
- 	    $this->data['sub_title'] 		= "Direct Messages";
-		$this->data['timeline'] 		= $user_timeline;
-		$this->render();
- 	}  	
-
- 	function favorites()
- 	{
-		$this->load->library('twitter');	
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->token_one, $this->check_connection->token_two);									
-		$user_timeline = $this->twitter->call('favorites');
-
- 	    $this->data['sub_title'] 		= "Favorites";
-		$this->data['timeline'] 		= $user_timeline;
-		$this->render();
- 	} 	
  
  	function post_to_social()
  	{
  	
 	    if (($this->config->item('twitter')) && ($this->input->post('post_to_twitter') == 1))
     	{
-			$this->load->library('twitter');	
-			// IS THIS TWITTER ACCOUNT ALREADY CONNECTED			
 			$check_connection = $this->connections_model->check_connection_user($this->session->userdata('user_id'), 'twitter');
 
 			if ($check_connection)
