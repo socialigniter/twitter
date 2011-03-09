@@ -6,3 +6,5 @@ INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'social_connection', 'TRUE');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'social_post', 'TRUE');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'auto_publish', 'TRUE');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'archive', 'TRUE');
+
+INSERT INTO `sites` VALUES (NULL, 'http://twitter.com/', 'twitter', 'remote', 'Twitter', 'http://twitter.com/phoenix/favicon.ico');
