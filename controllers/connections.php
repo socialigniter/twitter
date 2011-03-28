@@ -9,42 +9,48 @@ class Connections extends MY_Controller
 		   
 		if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 	
-		$this->load->library('twitter');
+		$this->load->library('tweet');
+
+		$this->tweet->enable_debug(FALSE);
 		
+		// Get Site for Twitter
 		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');
 	}
 
 	function index()
 	{	
+		// User Is Logged In
 		if ($this->social_auth->logged_in()) redirect('connections/twitter/add');
-
-		$tokens['access_token'] 		= NULL;
-		$tokens['access_token_secret'] 	= NULL;
-		$process_image					= FALSE;
 	
-		// Get Auth Tokens
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $tokens['access_token'], $tokens['access_token_secret'], base_url().'connections/twitter');
-	
-		// Returning from Twitter if tokens exist
-		if (isset($auth['access_token']) && isset($auth['access_token_secret']))
+		// Twitter Auth
+		if (!$this->tweet->logged_in())
 		{
-			$connection = $this->social_auth->check_connection_auth('twitter', $auth['access_token'], $auth['access_token_secret']);
+			// Redirect after
+			$this->tweet->set_callback(base_url().'twitter/connections');
 
+			// Send user to Twitter
+			$this->tweet->login();
+		}
+		else
+		{
+			// Get Tokens, Check Connection, Add
+			$tokens 		= $this->tweet->get_tokens();	
+			$connection		= $this->social_auth->check_connection_auth('twitter', $tokens['oauth_token'], $tokens['oauth_token_secret']);
+			$twitter_user	= $this->tweet->call('get', 'account/verify_credentials');
+			
 			// Already Connected			
 			if ($connection)
 			{
-				$twitter_user = $this->twitter->call('account/verify_credentials');
-				
 				// Adds Auth Tokens
 				if (connection_has_auth($connection))
 				{
 					$connection_data = array(
-						'auth_one'	=> $auth['access_token'],
-						'auth_two'	=> $auth['access_token_secret']
+						'auth_one'	=> $tokens['oauth_token'],
+						'auth_two'	=> $tokens['oauth_token_secret']
 					);
 
 					$this->social_auth->update_connection($connection->connection_id, $connection_data);
-				}		    
+				}
 				
 				// Login
 	        	if ($this->social_auth->social_login($connection->user_id, 'twitter')) 
@@ -59,25 +65,19 @@ class Connections extends MY_Controller
 		        }			
 			}
 			else
-			{
-				$twitter_user = $this->twitter->call('account/verify_credentials');
-				
+			{				
 				// Signup Social Data
 				$this->session->set_userdata($twitter_user);
-				$this->session->set_userdata('access_token', $auth['access_token']);
-		   		$this->session->set_userdata('access_token_secret', $auth['access_token_secret']);
+				$this->session->set_userdata('access_token', $tokens['oauth_token']);
+		   		$this->session->set_userdata('access_token_secret', $tokens['oauth_token_secret']);
 				$this->session->set_userdata('signup_name', $twitter_user->name);
 				$this->session->set_userdata('signup_user_state', 'has_connection_data');
 				$this->session->set_userdata('connection_signup_module', 'twitter');
 				$this->session->set_userdata('connection_return_url', base_url().'connections/twitter/signup');
 				
-				redirect(base_url().'signup_social');		          
+				redirect(base_url().'signup_social');				
 			}
-		}
-		else
-		{
-			redirect('connections/twitter', 'refresh');
-		}
+		}		
 	}
 	
 	function signup()
@@ -181,10 +181,11 @@ class Connections extends MY_Controller
 		   							
 				// Add Connection
 				$connection = $this->social_auth->add_connection($connection_data);
-				
+
 				// Empty Userdata
-				//$this->session->sess_destroy();
-				
+				$this->tweet->logout();
+				// $this->session->sess_destroy();
+
 				// Login
 				if ($this->social_auth->social_login($user_id, 'twitter'))
 				{
@@ -204,31 +205,34 @@ class Connections extends MY_Controller
 	}
 
 	function add()
-	{		
+	{
+		// User Is Logged In
 		if (!$this->social_auth->logged_in()) redirect('connections/twitter');
 
-		$tokens['access_token'] 		= NULL;
-		$tokens['access_token_secret'] 	= NULL;
-
-		// Get Auth Tokens
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $tokens['access_token'], $tokens['access_token_secret'], base_url().'connections/twitter/add');
-	
-		// Returning from Twitter if tokens exist
-		if (isset($auth['access_token']) && isset($auth['access_token_secret']))
+		// Do Twitter Auth
+		if (!$this->tweet->logged_in())
 		{
-			// Check Connected			
-			$check_connection = $this->social_auth->check_connection_auth('twitter', $auth['access_token'], $auth['access_token_secret']);
-	
+			// Redirect after auth
+			$this->tweet->set_callback(base_url().'twitter/connections/add');
+
+			// Send to login
+			$this->tweet->login();
+		}
+		else
+		{
+			// Get Tokens, Check Connection, Add
+			$tokens 			= $this->tweet->get_tokens();	
+			$check_connection	= $this->social_auth->check_connection_auth('twitter', $tokens['oauth_token'], $tokens['oauth_token_secret']);
+			$twitter_user		= $this->tweet->call('get', 'account/verify_credentials');
+
 			if (connection_has_auth($check_connection))
 			{			
 				$this->session->set_flashdata('message', "You've already connected this Twitter account");
 				redirect('settings/connections', 'refresh');							
 			}
 			else
-			{			
-				// Get User				
-				$twitter_user = $this->twitter->call('account/verify_credentials');
-				
+			{
+				// Add Connection	
 	       		$connection_data = array(
 	       			'site_id'				=> $this->module_site->site_id,
 	       			'user_id'				=> $this->session->userdata('user_id'),
@@ -236,22 +240,22 @@ class Connections extends MY_Controller
 	       			'type'					=> 'primary',
 	       			'connection_user_id'	=> $twitter_user->id,
 	       			'connection_username'	=> $twitter_user->screen_name,
-	       			'auth_one'				=> $auth['access_token'],
-	       			'auth_two'				=> $auth['access_token_secret']
+	       			'auth_one'				=> $tokens['oauth_token'],
+	       			'auth_two'				=> $tokens['oauth_token_secret']
 	       		);
-	       		
+
+	       		// Update / Add Connection	       		
 	       		if ($check_connection)
 	       		{
-	       			// Update Connection
-	       			$connection = $this->social_auth->update_connection($connection_data);
+	       			$connection = $this->social_auth->update_connection($check_connection->connection_id, $connection_data);
 	       		}
 	       		else
-	       		{				
-					// Add Connection
+	       		{
 					$connection = $this->social_auth->add_connection($connection_data);
 				}
-				
-				if($connection)
+
+				// Connection Status				
+				if ($connection)
 				{
 					$this->social_auth->set_userdata_connections($this->session->userdata('user_id'));
 				
@@ -263,12 +267,7 @@ class Connections extends MY_Controller
 				 	$this->session->set_flashdata('message', "That Twitter account is connected to another user");
 				 	redirect('settings/connections', 'refresh');
 				}
-			}
+			}		
 		}
-		else
-		{
-			redirect('connections/twitter/add', 'refresh');		
-		}	
 	}
-
 }

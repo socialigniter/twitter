@@ -7,44 +7,43 @@ class Home extends Dashboard_Controller
         
         if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 
-		$this->load->library('twitter');
+		$this->load->library('tweet');
 		$this->load->helper('twitter');
 		   
 		$this->data['page_title'] 	= 'Twitter';
 
 		$this->check_connection = $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
-	}	
+	}
 	
 	function timeline()
 	{
 		// No Connection
-		if (!$this->check_connection) redirect(base_url().'home/twitter/connect', 'refresh');	
-		
-		// Grant Auth
-		$auth = $this->twitter->oauth(config_item('twitter_consumer_key'), config_item('twitter_consumer_key_secret'), $this->check_connection->auth_one, $this->check_connection->auth_two);									
+		if (!$this->check_connection) redirect(base_url().'home/twitter/connect', 'refresh');
+
+		$this->tweet->set_tokens(array('oauth_token' => $this->check_connection->auth_one, 'oauth_token_secret' => $this->check_connection->auth_two));
 
  		$timeline		= NULL;
 		$timeline_view	= NULL;
- 	
+
  		// Type of Feed
 		if ($this->uri->segment(3) == 'timeline')
 		{
-			$timeline 					= $this->twitter->call('statuses/friends_timeline'); 	   
- 	   		$this->data['sub_title'] 	= "Timeline";
+			$timeline 						= $this->tweet->call('get', 'statuses/home_timeline'); 	   
+ 	   		$this->data['sub_title'] 		= "Timeline";
  	   	}
 		elseif ($this->uri->segment(3) == 'mentions')
 		{
-			$timeline 					= $this->twitter->call('statuses/mentions');
-	 	    $this->data['sub_title'] 	= "@ Replies";		
+			$timeline 						= $this->tweet->call('get', 'statuses/mentions');
+	 	    $this->data['sub_title'] 		= "@ Replies";		
 		}
 		elseif ($this->uri->segment(3) == 'direct_messages')
 		{
-			$timeline 						= $this->twitter->call('direct_messages');
+			$timeline 						= $this->tweet->call('get', 'direct_messages');
 	 	    $this->data['sub_title'] 		= "Direct Messages";		
 		}
 		elseif ($this->uri->segment(3) == 'favorites')		
 		{
-			$timeline 						= $this->twitter->call('favorites');
+			$timeline 						= $this->tweet->call('get', 'favorites');
 	 	    $this->data['sub_title'] 		= "Favorites";		
 		}
 
