@@ -88,6 +88,7 @@ class Connections extends MY_Controller
 		$twitter_image	= $this->session->userdata('profile_image_url');	
 		$username 		= $this->session->userdata('screen_name');
 		$email			= $this->session->userdata('signup_email');
+		$process_image  = FALSE;
 				
 		// Check Email Address
 		$user = $this->social_auth->get_user('email', $email);

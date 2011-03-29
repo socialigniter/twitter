@@ -15,6 +15,18 @@ class Home extends Dashboard_Controller
 		$this->check_connection = $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
 	}
 	
+	function test()
+	{
+		echo '<h2>Testing</h2>';
+	
+		$user = $this->tweet->call('get', 'direct_messages', array('count' => 100));
+		
+		echo 'Count: '.count($user);
+		echo '<pre>';
+		print_r($user);
+	
+	}
+	
 	function timeline()
 	{
 		// No Connection
@@ -46,6 +58,8 @@ class Home extends Dashboard_Controller
 			$timeline 						= $this->tweet->call('get', 'favorites');
 	 	    $this->data['sub_title'] 		= "Favorites";		
 		}
+
+		$timeline = NULL;
 
 		// Build Feed				 			
 		if (!empty($timeline))
