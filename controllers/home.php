@@ -8,7 +8,6 @@ class Home extends Dashboard_Controller
         if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 
 		$this->load->library('tweet');
-		$this->load->helper('twitter');
 		   
 		$this->data['page_title'] 	= 'Twitter';
 
@@ -59,8 +58,6 @@ class Home extends Dashboard_Controller
 	 	    $this->data['sub_title'] 		= "Favorites";		
 		}
 
-		$timeline = NULL;
-
 		// Build Feed				 			
 		if (!empty($timeline))
 		{
@@ -79,7 +76,7 @@ class Home extends Dashboard_Controller
 				// Activity
 				$this->data['item_content']			= item_linkify($tweet->text);
 				$this->data['item_content_id']		= $tweet->id;
-				$this->data['item_date']			= twitter_time_format($tweet->created_at);			
+				$this->data['item_date']			= timezone_datetime_to_elapsed($tweet->created_at);			
 
 		 		// Actions
 			 	$this->data['item_comment']			= base_url().'comment/item/'.$tweet->id;
@@ -98,7 +95,7 @@ class Home extends Dashboard_Controller
 	 		$timeline_view = '<li><p>No tweets to show from anyone</p></li>';
  		}
  		
-	 	$this->data['social_post'] 		= $this->social_igniter->get_social_post('<ul class="social_post">', '</ul>');
+	 	$this->data['social_post'] 		= $this->social_igniter->get_social_post($this->session->userdata('user_id'), 'social_post_horizontal'); 		
 		$this->data['status_updater']	= $this->load->view(config_item('dashboard_theme').'/partials/status_updater', $this->data, true);
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
