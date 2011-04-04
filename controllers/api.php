@@ -12,7 +12,6 @@ class Api extends Oauth_Controller
         if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 
 		$this->load->library('tweet');
-		$this->load->helper('twitter');
 		
 		// Get Site for Twitter
 		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');		
