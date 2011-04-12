@@ -16,7 +16,7 @@ class Settings extends Dashboard_Controller
 	{
 		$this->data['sub_title'] 	= 'Twitter';
 		$this->data['shared_ajax'] .= $this->load->view(config_item('dashboard_theme').'/partials/settings_modules_ajax.php', $this->data, true);		
-		$this->render();
+		$this->render('dashboard_wide');
 	}
 	
 }

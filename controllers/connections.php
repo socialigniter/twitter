@@ -132,7 +132,8 @@ class Connections extends MY_Controller
 				'image'		 	=> $image_name,
 				'language'		=> $this->session->userdata('lang'),
 				'time_zone'		=> $time_zone,
-				'geo_enabled'	=> $this->session->userdata('geo_enabled')
+				'geo_enabled'	=> $this->session->userdata('geo_enabled'),
+				'connection'	=> 'Twitter'
 	    	);
 	    			       			      				
 	    	// Register User

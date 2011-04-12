@@ -82,7 +82,7 @@ class Home extends Dashboard_Controller
 			 	$this->data['item_comment']			= base_url().'comment/item/'.$tweet->id;
 			 	$this->data['item_comment_avatar']	= $this->data['logged_image'];
 			 	
-			 	$this->data['item_can_modify']		= FALSE; //$this->social_tools->has_access_to_modify('activity', $tweet, $this->session->userdata('user_id'), $this->session->userdata('user_level_id'));
+			 	$this->data['item_can_modify']		= FALSE; //$this->social_auth->has_access_to_modify('activity', $tweet, $this->session->userdata('user_id'), $this->session->userdata('user_level_id'));
 				$this->data['item_edit']			= ''; //base_url().'home/'.$tweet->module.'/manage/'.$tweet->content_id;
 				$this->data['item_delete']			= ''; //base_url().'api/activity/destroy/id/'.$tweet->activity_id;
 

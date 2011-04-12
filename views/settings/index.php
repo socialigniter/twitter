@@ -13,6 +13,7 @@
 	<p><input type="text" name="consumer_key" value="<?= $settings['twitter']['consumer_key'] ?>"> Consumer Key </p> 
 	<p><input type="text" name="consumer_key_secret" value="<?= $settings['twitter']['consumer_key_secret'] ?>"> Consumer Key Secret</p>
 
+
 </div>
 
 <span class="item_separator"></span>
@@ -37,10 +38,20 @@
 	<?= form_dropdown('archive', config_item('yes_or_no'), $settings['twitter']['archive']) ?>
 	</p>
 
+</div>
+
+<span class="item_separator"></span>
+
+<div class="content_wrap_inner">
+
+	<h3>Default Account</h3>
+
 	<p>Auto Publish
 	<?= form_dropdown('auto_publish', config_item('yes_or_no'), $settings['twitter']['auto_publish']) ?>
 	</p>
 
+	<p>@ <input type="text" name="default_account" value="<?= $settings['twitter']['default_account'] ?>"> Default Account</p> 
+	
 	<p><a href="#">Connect</a> a Twitter account for this site to generate automatic tweets.</p>
 
 	<input type="hidden" name="module" value="twitter">
