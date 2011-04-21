@@ -19,4 +19,10 @@ class Settings extends Dashboard_Controller
 		$this->render('dashboard_wide');
 	}
 	
+	function widgets()
+	{
+		$this->data['sub_title'] 	= 'Widgets';		
+		
+		$this->render('dashboard_wide');
+	}	
 }

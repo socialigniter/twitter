@@ -20,7 +20,7 @@
 
 <div class="content_wrap_inner">
 
-	<h3>Setup</h3>
+	<h3>Social</h3>
 
 	<p>Sign In
 	<?= form_dropdown('social_login', config_item('yes_or_no'), $settings['twitter']['social_login']) ?>
@@ -50,7 +50,7 @@
 	<?= form_dropdown('auto_publish', config_item('yes_or_no'), $settings['twitter']['auto_publish']) ?>
 	</p>
 
-	<p>@ <input type="text" name="default_account" value="<?= $settings['twitter']['default_account'] ?>"> Default Account</p> 
+	<p>@ <input type="text" name="default_account" value="<?= $settings['twitter']['default_account'] ?>"></p> 
 	
 	<p><a href="#">Connect</a> a Twitter account for this site to generate automatic tweets.</p>
 
