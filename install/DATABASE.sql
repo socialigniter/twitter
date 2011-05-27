@@ -1,3 +1,5 @@
+INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'widgets', 'TRUE');
+INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'categories', 'TRUE');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'enabled', 'TRUE');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'consumer_key', '');
 INSERT INTO `settings` VALUES(NULL, 1, 'twitter', 'consumer_key_secret', '');

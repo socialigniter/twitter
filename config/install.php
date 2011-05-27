@@ -13,6 +13,8 @@
 * Description: 	Install values for Twitter App for Social Igniter 
 */
 /* Settings */
+$config['twitter_settings']['widgets'] 				= 'TRUE';
+$config['twitter_settings']['categories'] 			= 'TRUE';
 $config['twitter_settings']['enabled'] 				= 'TRUE';
 $config['twitter_settings']['consumer_key'] 		= '';
 $config['twitter_settings']['consumer_key_secret'] 	= '';
