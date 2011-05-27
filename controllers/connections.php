@@ -9,7 +9,12 @@ class Connections extends MY_Controller
 		   
 		if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 	
-		$this->load->library('tweet');
+		$config = array(
+			'twitter_consumer_key' => config_item('twitter_consumer_key'),
+			'twitter_consumer_secret' => config_item('twitter_consumer_key_secret')
+		);
+	
+		$this->load->library('tweet', $config);
 
 		$this->tweet->enable_debug(FALSE);
 		

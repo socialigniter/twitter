@@ -9,13 +9,10 @@
 *
 * Project:	http://social-igniter.com
 * Source: 	http://github.com/socialigniter/module-twitter
-*          
-* Created: 07-07-2010 
 *
 * Description: config for Twitter module for Social Igniter
 */
 
 // Twitter
+$config['twitter_path']					= 'twitter/';
 $config['twitter']						= TRUE;
-$config['twitter_consumer_key'] 		= "";
-$config['twitter_consumer_secret'] 		= "";
