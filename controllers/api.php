@@ -17,7 +17,6 @@ class Api extends Oauth_Controller
 		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');		
 	}
 	
-	
 	function install_authd_get()
 	{
 		
@@ -25,17 +24,14 @@ class Api extends Oauth_Controller
 	
 	function new_authd_get()
 	{
-	
-		$connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary');
+/*		$connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary');
 
 		$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
 		
-
 		$messages = $this->tweet->call('get', 'direct_messages');
 
 		if ($messages)
 		{
-		/*
 			foreach($messages as $msg)
 			{			
 				$connection_user_id	= $msg->sender->id;
@@ -87,19 +83,36 @@ class Api extends Oauth_Controller
 				{
 					
 				}
-				
 			}
-		*/
-		
+			
          	$message = array('status' => 'success', 'message' => 'New comments found', 'data' => count($messages));	
 		}
 		else
 		{
          	$message = array('status' => 'error', 'message' => 'No new comments found', 'data' => count($messages));			
 		}
+*/		
+		$message = array('status' => 'success', 'message' => 'New comments found', 'data' => count($messages));
 		
+        $this->response($message, 200);	        			
+	}
+	
+	function social_post_authd_post()
+	{
+		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
+		{
+			$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
+
+			$twitter_post = $this->tweet->call('post', 'statuses/update', array('status' => $this->input->post('content')));		
+
+			$message = array('status' => 'success', 'message' => 'Posted to Twitter successfully', 'data' => $twitter_post);
+		}
+		else
+		{
+			$message = array('status' => 'error', 'message' => 'No Twitter account for that user');			
+		}
+
         $this->response($message, 200);	
-        			
 	}
 	
 }
