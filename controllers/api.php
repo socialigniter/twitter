@@ -5,6 +5,8 @@
  */
 class Api extends Oauth_Controller
 {
+	protected $module_site;
+
     function __construct()
     {
         parent::__construct(); 
@@ -113,6 +115,30 @@ class Api extends Oauth_Controller
 		}
 
         $this->response($message, 200);	
+	}
+	
+	function social_message_authd_post()
+	{
+		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
+		{
+			$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
+
+			$message_data = array(
+				'user_id'		=> 147395569,
+				'text'			=> $this->input->post('message'),
+				'wrap_links'	=> TRUE
+			);
+
+			$twitter_post = $this->tweet->call('post', 'direct_messages/new', $message_data);		
+
+			$message = array('status' => 'success', 'message' => 'Message sent to Twitter', 'data' => $twitter_post);
+		}
+		else
+		{
+			$message = array('status' => 'error', 'message' => 'No Twitter account for that user');			
+		}
+
+        $this->response($message, 200);
 	}
 	
 }
