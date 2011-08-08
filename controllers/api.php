@@ -124,7 +124,7 @@ class Api extends Oauth_Controller
 			$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
 
 			$message_data = array(
-				'user_id'		=> 147395569,
+				'user_id'		=> $this->input->post('remote_user_id'),
 				'text'			=> $this->input->post('message'),
 				'wrap_links'	=> TRUE
 			);
