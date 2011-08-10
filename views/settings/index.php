@@ -4,7 +4,8 @@
 	<div class="content_inner_top_right">
 		<h3>App</h3>
 		<p><?= form_dropdown('enabled', config_item('enable_disable'), $settings['twitter']['enabled']) ?></p>
-		<p><a href="<?= base_url() ?>api/<?= $this_module ?>/uninstall" id="app_uninstall" class="button_delete">Uninstall</a></p>
+		<p><a href="<?= base_url() ?>api/<?= $this_module ?>/reinstall" id="app_reinstall" class="button_action">Reinstall</a>
+		<a href="<?= base_url() ?>api/<?= $this_module ?>/uninstall" id="app_uninstall" class="button_delete">Uninstall</a></p>
 	</div>
 	
 	<h3>Application Keys</h3>
@@ -23,13 +24,21 @@
 
 	<h3>Social</h3>
 
-	<p>Sign In
+	<p>Login
 	<?= form_dropdown('social_login', config_item('yes_or_no'), $settings['twitter']['social_login']) ?>
 	</p>
+
+	<p>Login Redirect<br>
+	<?= base_url() ?> <input type="text" size="30" name="login_redirect" value="<?= $settings['twitter']['login_redirect'] ?>" />
+	</p>	
 	
 	<p>Connections 
 	<?= form_dropdown('social_connection', config_item('yes_or_no'), $settings['twitter']['social_connection']) ?>
-	</p>	
+	</p>
+
+	<p>Connections Redirect<br>
+	<?= base_url() ?> <input type="text" size="30" name="connections_redirect" value="<?= $settings['twitter']['connections_redirect'] ?>" />
+	</p>
 
 	<p>Post
 	<?= form_dropdown('social_post', config_item('yes_or_no'), $settings['twitter']['social_post']) ?>	

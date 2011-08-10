@@ -40,6 +40,27 @@ class Api extends Oauth_Controller
 		
 		$this->response($message, 200);
 	}
+
+	function reinstall_authd_get()
+	{
+		// Load
+		$this->load->library('installer');
+		$this->load->config('install');        
+
+		// Settings & Create Folders
+		$settings = $this->installer->install_settings('twitter', config_item('twitter_settings'), TRUE);
+
+		if ($settings == TRUE)
+		{
+            $message = array('status' => 'success', 'message' => 'Yay, the Twitter App was reinstalled');
+        }
+        else
+        {
+            $message = array('status' => 'error', 'message' => 'Dang Twitter App could not be uninstalled');
+        }		
+		
+		$this->response($message, 200);
+	}
 	
 	function new_authd_get()
 	{

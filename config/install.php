@@ -24,6 +24,8 @@ $config['twitter_settings']['social_post'] 			= 'TRUE';
 $config['twitter_settings']['auto_publish'] 		= 'TRUE';
 $config['twitter_settings']['default_account'] 		= '';
 $config['twitter_settings']['archive']				= 'TRUE';
+$config['twitter_settings']['login_redirect']		= '';
+$config['twitter_settings']['connections_redirect']	= '';
 
 /* Sites */
 $config['twitter_sites'][] = array(
