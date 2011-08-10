@@ -24,3 +24,12 @@ $config['twitter_settings']['social_post'] 			= 'TRUE';
 $config['twitter_settings']['auto_publish'] 		= 'TRUE';
 $config['twitter_settings']['default_account'] 		= '';
 $config['twitter_settings']['archive']				= 'TRUE';
+
+/* Sites */
+$config['twitter_sites'][] = array(
+	'url'		=> 'http://twitter.com/', 
+	'module'	=> 'twitter', 
+	'type' 		=> 'remote', 
+	'title'		=> 'Twitter', 
+	'favicon'	=> 'http://twitter.com/phoenix/favicon.ico'
+);

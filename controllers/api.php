@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 /* 
- * Classes API : Module : Social-Igniter
+ * Twitter API : Module : Social-Igniter
  *
  */
 class Api extends Oauth_Controller
@@ -10,18 +10,35 @@ class Api extends Oauth_Controller
     function __construct()
     {
         parent::__construct(); 
-        
-        if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 
 		$this->load->library('tweet');
 		
-		// Get Site for Twitter
+		// Get Site Twitter
 		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');		
 	}
 	
 	function install_authd_get()
 	{
+		// Load
+		$this->load->library('installer');
+		$this->load->config('install');        
+
+		// Settings & Create Folders
+		$settings = $this->installer->install_settings('twitter', config_item('twitter_settings'));
+	
+		// Site
+		$site = $this->installer->install_sites(config_item('twitter_sites'));
+	
+		if ($settings == TRUE AND $site == TRUE)
+		{
+            $message = array('status' => 'success', 'message' => 'Yay, the Twitter App was installed');
+        }
+        else
+        {
+            $message = array('status' => 'error', 'message' => 'Dang Twitter App could not be uninstalled');
+        }		
 		
+		$this->response($message, 200);
 	}
 	
 	function new_authd_get()
