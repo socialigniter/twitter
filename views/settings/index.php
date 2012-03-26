@@ -13,7 +13,7 @@
 	<p>Twitter requires <a href="https://twitter.com/apps" target="_blank">registering your application</a></p>
 				
 	<p><input type="text" name="consumer_key" value="<?= $settings['twitter']['consumer_key'] ?>"> Consumer Key </p> 
-	<p><input type="text" name="consumer_key_secret" value="<?= $settings['twitter']['consumer_key_secret'] ?>"> Consumer Key Secret</p>
+	<p><input type="text" name="consumer_secret" value="<?= $settings['twitter']['consumer_secret'] ?>"> Consumer Secret</p>
 
 
 </div>
