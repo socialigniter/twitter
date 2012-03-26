@@ -1,6 +1,8 @@
 <?php
 class Connections extends MY_Controller
 {
+	protected $consumer;
+	protected $twitter;
 	protected $module_site;
 
     function __construct()
@@ -9,56 +11,91 @@ class Connections extends MY_Controller
 		   
 		if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
 	
-		$config = array(
-			'twitter_consumer_key' => config_item('twitter_consumer_key'),
-			'twitter_consumer_secret' => config_item('twitter_consumer_key_secret')
-		);
-	
-		$this->load->library('tweet', $config);
-
-		$this->tweet->enable_debug(FALSE);
+		// Load Library
+        $this->load->library('oauth');
 		
-		// Get Site for Twitter
-		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');
+		// Get Site
+		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');	
 	}
+
 
 	function index()
 	{	
-		// User Is Logged In
+		// Is Logged In
 		if ($this->social_auth->logged_in()) redirect('connections/twitter/add');
-	
-		// Twitter Auth
-		if (!$this->tweet->logged_in())
-		{
-			// Redirect after
-			$this->tweet->set_callback(base_url().'twitter/connections');
+		
+        // Create Consumer
+        $consumer = $this->oauth->consumer(array(
+            'key' 	 	=> config_item('twitter_consumer_key'),
+            'secret' 	=> config_item('twitter_consumer_secret'),
+            'callback'	=> base_url().'twitter/connections'
+        ));
 
-			// Send user to Twitter
-			$this->tweet->login();
+        // Load Provider
+        $twitter = $this->oauth->provider('twitter');		
+	
+		// Send to Twitter
+        if (!$this->input->get_post('oauth_token'))
+        {		
+            // Get request token for consumer
+            $token = $twitter->request_token($consumer);
+
+            // Store token
+            $this->session->set_userdata('oauth_token', base64_encode(serialize($token)));
+
+            // Redirect Twitter
+            $twitter->authorize($token, array('oauth_callback' => base_url().'twitter/connections'));
 		}
 		else
 		{
-			// Get Tokens, Check Connection, Add
-			$tokens 		= $this->tweet->get_tokens();	
-			$connection		= $this->social_auth->check_connection_auth('twitter', $tokens['oauth_token'], $tokens['oauth_token_secret']);
-			$twitter_user	= $this->tweet->call('get', 'account/verify_credentials');
+      		// Has Stored Token
+            if ($this->session->userdata('oauth_token'))
+            {
+                // Get the token
+                $token = unserialize(base64_decode($this->session->userdata('oauth_token')));
+            }
+
+			// Has Token
+            if (!empty($token) AND $token->access_token !== $this->input->get_post('oauth_token'))
+            {   
+                // Delete token, it is not valid
+                $this->session->unset_userdata('oauth_token');
+
+                // Send the user back to the beginning
+                exit('invalid token after coming back to site');
+            }
+
+            // Store Verifier
+            $token->verifier($this->input->get_post('oauth_verifier'));
+
+            // Exchange request token for access token
+            $tokens = $twitter->access_token($consumer, $token);
+		
+			// Check Connection
+			$check_connection = $this->social_auth->check_connection_auth('twitter', $tokens->access_token, $tokens->secret);
+
+			// Load Tweet Library
+			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));	            
 			
-			// Already Connected			
-			if ($connection)
+			// Get User Details
+			$twitter_user = $this->tweet->call('get', 'account/verify_credentials');
+			
+			// Already Connected
+			if ($check_connection)
 			{
-				// Adds Auth Tokens
-				if (connection_has_auth($connection))
+				// Adds Auth Tokens (if user had already been added via Twitter without having authed in)
+				if (connection_has_auth($check_connection))
 				{
 					$connection_data = array(
-						'auth_one'	=> $tokens['oauth_token'],
-						'auth_two'	=> $tokens['oauth_token_secret']
+						'auth_one'	=> $tokens->access_token,
+						'auth_two'	=> $tokens->secret
 					);
 
-					$this->social_auth->update_connection($connection->connection_id, $connection_data);
+					$this->social_auth->update_connection($check_connection->connection_id, $connection_data);
 				}
 				
 				// Login
-	        	if ($this->social_auth->social_login($connection->user_id, 'twitter')) 
+	        	if ($this->social_auth->social_login($check_connection->user_id, 'twitter')) 
 	        	{
 		        	$this->session->set_flashdata('message', "Login with Twitter was successful");
 		        	redirect(base_url().'home', 'refresh');
@@ -73,8 +110,8 @@ class Connections extends MY_Controller
 			{				
 				// Signup Social Data
 				$this->session->set_userdata($twitter_user);
-				$this->session->set_userdata('access_token', $tokens['oauth_token']);
-		   		$this->session->set_userdata('access_token_secret', $tokens['oauth_token_secret']);
+				$this->session->set_userdata('access_token', $tokens->access_token);
+		   		$this->session->set_userdata('access_token_secret', $tokens->secret);
 				$this->session->set_userdata('signup_name', $twitter_user->name);
 				$this->session->set_userdata('signup_user_state', 'has_connection_data');
 				$this->session->set_userdata('connection_signup_module', 'twitter');
@@ -84,7 +121,8 @@ class Connections extends MY_Controller
 			}
 		}		
 	}
-	
+
+
 	function signup()
 	{
     	if ($this->session->userdata('signup_user_state') != 'has_connection_and_email') redirect('signup', 'refresh');
@@ -161,7 +199,7 @@ class Connections extends MY_Controller
 	        		$this->load->model('image_model');
 						
 					// Delete / Make Folder
-					$create_path	= config_item('users_images_folder').$user_id.'/';
+					$create_path = config_item('users_images_folder').$user_id.'/';
 					delete_files($create_path);
 					make_folder($create_path);
 
@@ -169,7 +207,9 @@ class Connections extends MY_Controller
 					$this->image_model->get_external_image($image_full, $create_path.$image_name);
 
 					// Make Sizes
+					$this->image_model->make_thumbnail($create_path, $image_name, 'users', 'medium');
 					$this->image_model->make_thumbnail($create_path, $image_name, 'users', 'small');
+
 				}
 
 		   		$connection_data = array(
@@ -186,15 +226,19 @@ class Connections extends MY_Controller
 				// Add Connection
 				$connection = $this->social_auth->add_connection($connection_data);
 
-				// Empty Userdata
-				$this->tweet->logout();
-				// $this->session->sess_destroy();
+				// Clear Twitter Data				
+				$this->session->unset_userdata('access_token');
+		   		$this->session->unset_userdata('access_token_secret');
+				$this->session->unset_userdata('signup_name');
+				$this->session->unset_userdata('signup_user_state');
+				$this->session->unset_userdata('connection_signup_module');
+				$this->session->unset_userdata('connection_return_url');
 
 				// Login
 				if ($this->social_auth->social_login($user_id, 'twitter'))
 				{
 		        	$this->session->set_flashdata('message', "Login with Twitter was successful");
-		        	redirect(base_url().'home', 'refresh');								
+		        	redirect(base_url().'home');								
 				}
 				else
 				{
@@ -208,26 +252,67 @@ class Connections extends MY_Controller
 		}
 	}
 
+
 	function add()
 	{
 		// User Is Logged In
 		if (!$this->social_auth->logged_in()) redirect('connections/twitter');
 
-		// Do Twitter Auth
-		if (!$this->tweet->logged_in())
-		{
-			// Redirect after auth
-			$this->tweet->set_callback(base_url().'twitter/connections/add');
+        // Create Consumer
+        $consumer = $this->oauth->consumer(array(
+            'key' 	 	=> config_item('twitter_consumer_key'),
+            'secret' 	=> config_item('twitter_consumer_secret'),
+            'callback'	=> base_url().'twitter/connections/add'
+        ));
 
-			// Send to login
-			$this->tweet->login();
+        // Load Provider
+        $twitter = $this->oauth->provider('twitter');		
+	
+		// Send to Twitter
+        if (!$this->input->get_post('oauth_token'))
+        {		
+            // Get request token for consumer
+            $token = $twitter->request_token($consumer);
+
+            // Store token
+            $this->session->set_userdata('oauth_token', base64_encode(serialize($token)));
+
+            // Redirect Twitter
+            $twitter->authorize($token, array('oauth_callback' => base_url().'twitter/connections'));
 		}
 		else
 		{
-			// Get Tokens, Check Connection, Add
-			$tokens 			= $this->tweet->get_tokens();	
-			$check_connection	= $this->social_auth->check_connection_auth('twitter', $tokens['oauth_token'], $tokens['oauth_token_secret']);
-			$twitter_user		= $this->tweet->call('get', 'account/verify_credentials');
+      		// Has Stored Token
+            if ($this->session->userdata('oauth_token'))
+            {
+                // Get the token
+                $token = unserialize(base64_decode($this->session->userdata('oauth_token')));
+            }
+
+			// Has Token
+            if (!empty($token) AND $token->access_token !== $this->input->get_post('oauth_token'))
+            {   
+                // Delete token, it is not valid
+                $this->session->unset_userdata('oauth_token');
+
+                // Send the user back to the beginning
+                exit('invalid token after coming back to site');
+            }
+
+            // Store Verifier
+            $token->verifier($this->input->get_post('oauth_verifier'));
+
+            // Exchange request token for access token
+            $tokens = $twitter->access_token($consumer, $token);
+		
+			// Check Connection
+			$check_connection = $this->social_auth->check_connection_auth('twitter', $tokens->access_token, $tokens->secret);
+
+			// Load Tweet Library
+			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));	            
+			
+			// Get User Details
+			$twitter_user = $this->tweet->call('get', 'account/verify_credentials');
 
 			if (connection_has_auth($check_connection))
 			{			
@@ -244,8 +329,8 @@ class Connections extends MY_Controller
 	       			'type'					=> 'primary',
 	       			'connection_user_id'	=> $twitter_user->id,
 	       			'connection_username'	=> $twitter_user->screen_name,
-	       			'auth_one'				=> $tokens['oauth_token'],
-	       			'auth_two'				=> $tokens['oauth_token_secret']
+	       			'auth_one'				=> $tokens->access_token,
+	       			'auth_two'				=> $tokens->secret
 	       		);
 
 	       		// Update / Add Connection	       		

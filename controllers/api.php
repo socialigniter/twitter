@@ -9,9 +9,7 @@ class Api extends Oauth_Controller
 
     function __construct()
     {
-        parent::__construct(); 
-
-		$this->load->library('tweet');
+        parent::__construct();	
 		
 		// Get Site Twitter
 		$this->module_site = $this->social_igniter->get_site_view_row('module', 'twitter');		
@@ -141,9 +139,10 @@ class Api extends Oauth_Controller
 	{
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
-			$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
+			// Load Tweet Library
+			$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
 
-			$twitter_post = $this->tweet->call('post', 'statuses/update', array('status' => $this->input->post('content')));		
+			$twitter_post = $this->tweet->call('post', 'statuses/update', array('status' => $this->input->post('content')));	
 
 			$message = array('status' => 'success', 'message' => 'Posted to Twitter successfully', 'data' => $twitter_post);
 		}
@@ -159,7 +158,8 @@ class Api extends Oauth_Controller
 	{
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
-			$this->tweet->set_tokens(array('oauth_token' => $connection->auth_one, 'oauth_token_secret' => $connection->auth_two));
+			// Load Tweet Library
+			$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
 
 			$message_data = array(
 				'user_id'		=> $this->input->post('remote_user_id'),

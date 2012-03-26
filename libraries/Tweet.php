@@ -1,62 +1,34 @@
 <?php
-	
-class tweet {
+/* CodeIgniter Tweet Library by Elliott Haughin - http://www.haughin.com
+ * Modified by Brennan Novak - http://social-igniter.com
+ *
+ * @category   Tweet
+ * @package    CodeIgniter
+ * @subpackage Client
+ */
+
+class Tweet {
 	
 	private $_oauth = NULL;
 	
-	function __construct($config)
+	function __construct($tokens=NULL)
 	{
-		$this->_oauth = new tweetOauth($config);
+		$this->_oauth = new tweetOauth($tokens);		
 	}
 	
 	function __call($method, $args)
 	{
-		if ( method_exists($this, $method) )
+		if (method_exists($this, $method))
 		{
 			return call_user_func_array(array($this, $method), $args);
 		}
 		
 		return call_user_func_array(array($this->_oauth, $method), $args);
 	}
-	
-	function logged_in()
-	{
-		return $this->_oauth->loggedIn();
-	}
-	
-	function set_callback($url)
-	{
-		$this->_oauth->setCallback($url);
-	}
-	
-	function login()
-	{
-		return $this->_oauth->login();
-	}
-	
-	function logout()
-	{
-		return $this->_oauth->logout();
-	}
-	
-	function get_tokens()
-	{
-		$tokens = array(
-			'oauth_token' 			=> $this->_oauth->getAccessKey(),
-			'oauth_token_secret' 	=> $this->_oauth->getAccessSecret()
-		);
-					
-		return $tokens;
-	}
-	
-	function set_tokens($tokens)
-	{
-		return $this->_oauth->setAccessTokens($tokens);
-	}
 }
 
-class tweetException extends Exception {
-	
+class tweetException extends Exception
+{	
 	function __construct($string)
 	{
 		parent::__construct($string);
@@ -67,10 +39,9 @@ class tweetException extends Exception {
 	}
 }
 
-class tweetConnection {
-	
+class tweetConnection
+{	
 	// Allow multi-threading.
-	
 	private $_mch = NULL;
 	private $_properties = array();
 	
@@ -179,9 +150,9 @@ class tweetConnection {
 	
 	private function _getResponse($key = NULL)
 	{
-		if ( $key == NULL ) return FALSE;
+		if ($key == NULL) return FALSE;
 		
-		if ( isset($this->_responses[$key]) )
+		if (isset($this->_responses[$key]))
 		{
 			return $this->_responses[$key];
 		}
@@ -192,26 +163,26 @@ class tweetConnection {
 		{
 			$response = curl_multi_exec($this->_mch, $running_curl);
 			
-			if ( $running !== NULL && $running_curl != $running )
+			if ($running !== NULL && $running_curl != $running)
 			{
 				$this->_setResponse($key);
 				
-				if ( isset($this->_responses[$key]) )
+				if (isset($this->_responses[$key]))
 				{
-					$response = new tweetResponseOauth( (object) $this->_responses[$key] );
+					$response = new tweetResponseOauth((object) $this->_responses[$key]);
 					
-					if ( $response->__resp->code !== 200 )
+					if ($response->__resp->code !== 200)
 					{
-						throw new tweetException($response->__resp->code.' | Request Failed: '.$response->__resp->data->request.' - '.$response->__resp->data->error);
+						throw new tweetException($response->__resp->code.' | Request Failed: '.$response->__resp->data);
 					}
-					
+
 					return $response;
 				}
 			}
 			
 			$running = $running_curl;
 			
-		} while ( $running_curl > 0);
+		} while ($running_curl > 0);
 		
 	}
 	
@@ -232,8 +203,8 @@ class tweetConnection {
 	}
 }
 
-class tweetResponseOauth {
-	
+class tweetResponseOauth
+{	
 	private $__construct;
 
 	public function __construct($resp)
@@ -273,45 +244,39 @@ class tweetResponseOauth {
 	}
 }
 
-class tweetOauth extends tweetConnection {
-	
+class tweetOauth extends tweetConnection
+{
 	private $_obj;
-	private $_tokens = array();
-	private $_authorizationUrl 	= 'http://twitter.com/oauth/authenticate';
-	private $_requestTokenUrl 	= 'http://api.twitter.com/oauth/request_token';
-	private $_accessTokenUrl 	= 'http://api.twitter.com/oauth/access_token';
+	private $_tokens 			= array();
 	private $_signatureMethod 	= 'HMAC-SHA1';
 	private $_version 			= '1.0';
 	private $_apiUrl 			= 'http://api.twitter.com';
 	private $_searchUrl			= 'http://search.twitter.com/';
-	private $_callback = NULL;
-	private $_errors = array();
-	private $_enable_debug = FALSE;
-	
-	function __construct($config)
+	private $_callback 			= NULL;
+	private $_errors 			= array();
+	private $_enable_debug		= FALSE;
+
+	function __construct($tokens)
 	{
 		parent::__construct();
 		
 		$this->_obj =& get_instance();
-		$this->_obj->load->library('unit_test');
-		
+
 		$this->_tokens = array(
-			'consumer_key' 		=> $config['twitter_consumer_key'],
-			'consumer_secret' 	=> $config['twitter_consumer_secret'],
-			'access_key'		=> $this->_getAccessKey(),
-			'access_secret' 	=> $this->_getAccessSecret()
+			'consumer_key' 		=> config_item('twitter_consumer_key'),
+			'consumer_secret' 	=> config_item('twitter_consumer_secret'),
+			'access_key'		=> $tokens['access_key'],
+			'access_secret' 	=> $tokens['access_secret']
 		);
-							
-		$this->_checkLogin();
 	}
 	
 	function __destruct()
 	{
-		if ( !$this->_enable_debug ) return;
+		if (!$this->_enable_debug) return;
 		
-		if ( !empty($this->_errors) )
+		if (!empty($this->_errors))
 		{
-			foreach ( $this->_errors as $key => $e )
+			foreach ($this->_errors as $key => $e)
 			{
 				echo '<pre>'.$e.'</pre>';
 			}
@@ -327,168 +292,19 @@ class tweetOauth extends tweetConnection {
 	public function call($method, $path, $args = NULL)
 	{
 		$response = $this->_httpRequest(strtoupper($method), $this->_apiUrl.'/'.$path.'.json', $args);
-		
-		// var_dump($response);
-		// die();
-		
-		return ( $response === NULL ) ? FALSE : $response->_result;
+		return ($response === NULL) ? FALSE : $response->_result;
 	}
 	
 	public function search($args = NULL)
 	{
 		$response = $this->_httpRequest('GET', $this->_searchUrl.'search.json', $args);
-		
-		return ( $response === NULL ) ? FALSE : $response->_result;
+		return ($response === NULL) ? FALSE : $response->_result;
 	}
 	
-	public function loggedIn()
+	protected function _httpRequest($method=null, $url=null, $params=null)
 	{
-		$access_key = $this->_getAccessKey();
-		$access_secret = $this->_getAccessSecret();
-		
-		$loggedIn = FALSE;
-		
-		if ( $this->_getAccessKey() !== NULL && $this->_getAccessSecret() !== NULL )
-		{
-			$loggedIn = TRUE;
-		}
-		
-		$this->_obj->unit->run($loggedIn, TRUE, 'Logged In');
-		return $loggedIn;
-	}
-	
-	private function _checkLogin()
-	{
-		if ( isset($_GET['oauth_token']) )
-		{
-			$this->_setAccessKey($_GET['oauth_token']);
-			$token = $this->_getAccessToken();
-			
-			$token = $token->_result;
-			
-			$token = ( is_bool($token) ) ? $token : (object) $token;
-			
-			if ( !empty($token->oauth_token) && !empty($token->oauth_token_secret) )
-			{
-				$this->_setAccessKey($token->oauth_token);
-				$this->_setAccessSecret($token->oauth_token_secret);
-			}
-			
-			redirect(current_url());
-			return NULL;
-		}
-	}
-	
-	public function login()
-	{
-		if ( ($this->_getAccessKey() === NULL || $this->_getAccessSecret() === NULL) )
-		{
-			header('Location: '.$this->_getAuthorizationUrl());
-			return;
-		}
-		
-		return $this->_checkLogin();
-	}
-	
-	public function logout()
-	{
-		$this->_obj->session->unset_userdata('twitter_oauth_tokens');
-	}
-	
-	public function getTokens()
-	{
-		return $this->_tokens;
-	}
-	
-	private function _getConsumerKey()
-	{
-		return $this->_tokens['consumer_key'];
-	}
-	
-	private function _getConsumerSecret()
-	{
-		return $this->_tokens['consumer_secret'];
-	}
-	
-	public function getAccessKey(){ return $this->_getAccessKey(); }
-	
-	private function _getAccessKey()
-	{
-		$tokens = $this->_obj->session->userdata('twitter_oauth_tokens');
-		return ( $tokens === FALSE || !isset($tokens['access_key']) || empty($tokens['access_key']) ) ? NULL : $tokens['access_key'];
-	}
-	
-	private function _setAccessKey($access_key)
-	{
-		$tokens = $this->_obj->session->userdata('twitter_oauth_tokens');
-		
-		if ( $tokens === FALSE || !is_array($tokens) )
-		{
-			$tokens = array('access_key' => $access_key);
-		}
-		else
-		{
-			$tokens['access_key'] = $access_key;
-		}
-		
-		$this->_obj->session->set_userdata('twitter_oauth_tokens', $tokens);
-	}
-	
-	public function getAccessSecret(){ return $this->_getAccessSecret(); }
-	
-	private function _getAccessSecret()
-	{
-		$tokens = $this->_obj->session->userdata('twitter_oauth_tokens');
-		return ( $tokens === FALSE || !isset($tokens['access_secret']) || empty($tokens['access_secret']) ) ? NULL : $tokens['access_secret'];
-	}
-	
-	private function _setAccessSecret($access_secret)
-	{
-		$tokens = $this->_obj->session->userdata('twitter_oauth_tokens');
-		
-		if ( $tokens === FALSE || !is_array($tokens) )
-		{
-			$tokens = array('access_secret' => $access_secret);
-		}
-		else
-		{
-			$tokens['access_secret'] = $access_secret;
-		}
-		
-		$this->_obj->session->set_userdata('twitter_oauth_tokens', $tokens);
-	}
-	
-	private function _setAccessTokens($tokens)
-	{
-		$this->_setAccessKey($tokens['oauth_token']);
-		$this->_setAccessSecret($tokens['oauth_token_secret']);
-	}
-	
-	public function setAccessTokens($tokens)
-	{
-		return $this->_setAccessTokens($tokens);
-	}
-	
-	private function _getAuthorizationUrl()
-	{
-		$token = $this->_getRequestToken();
-		return $this->_authorizationUrl.'?oauth_token=' . $token->oauth_token;
-	}
-	
-	private function _getRequestToken()
-	{
-		return $this->_httpRequest('GET', $this->_requestTokenUrl);
-	}
-	
-	private function _getAccessToken()
-	{
-		return $this->_httpRequest('GET', $this->_accessTokenUrl);
-	}
-	
-	protected function _httpRequest($method = null, $url = null, $params = null)
-	{
-		if( empty($method) || empty($url) ) return FALSE;
-		if ( empty($params['oauth_signature']) ) $params = $this->_prepareParameters($method, $url, $params);
+		if (empty($method) || empty($url)) return FALSE;
+		if (empty($params['oauth_signature'])) $params = $this->_prepareParameters($method, $url, $params);
 		
 		$this->_connection = new tweetConnection();
 		
@@ -516,31 +332,13 @@ class tweetOauth extends tweetConnection {
 		}
 	}
 	
-	private function _getCallback()
-	{
-		return $this->_callback;
-	}
-	
-	public function setCallback($url)
-	{
-		$this->_callback = $url;
-	}
-	
 	private function _prepareParameters($method = NULL, $url = NULL, $params = NULL)
 	{
-		if ( empty($method) || empty($url) ) return FALSE;
-		
-		$callback = $this->_getCallback();
-		
-		if ( !empty($callback) )
-		{
-			$oauth['oauth_callback'] = $callback;
-		}
-		
-		$this->setCallback(NULL);
-		
-		$oauth['oauth_consumer_key'] 		= $this->_getConsumerKey();
-		$oauth['oauth_token'] 				= $this->_getAccessKey();
+		if (empty($method) || empty($url)) return FALSE;
+
+		$oauth['oauth_callback'] 			= base_url().'connections/twitter/callback/';
+		$oauth['oauth_consumer_key'] 		= $this->_tokens['consumer_key'];
+		$oauth['oauth_token'] 				= $this->_tokens['access_key'];
 		$oauth['oauth_nonce'] 				= $this->_generateNonce();
 		$oauth['oauth_timestamp'] 			= time();
 		$oauth['oauth_signature_method'] 	= $this->_signatureMethod;
@@ -573,7 +371,7 @@ class tweetOauth extends tweetConnection {
 	
 	private function _generateSignature($method = null, $url = null, $params = null)
 	{
-		if( empty($method) || empty($url) ) return FALSE;
+		if(empty($method) || empty($url)) return FALSE;
 		
 		// concatenating
 		$concatenatedParams = '';
@@ -598,7 +396,7 @@ class tweetOauth extends tweetConnection {
 	{
 		$urlParts = parse_url($url);
 
-		if ( !isset($urlParts['port']) ) $urlParts['port'] = 80;
+		if (!isset($urlParts['port'])) $urlParts['port'] = 80;
 
 		$scheme = strtolower($urlParts['scheme']);
 		$host = strtolower($urlParts['host']);
@@ -606,14 +404,14 @@ class tweetOauth extends tweetConnection {
 
 		$retval = "{$scheme}://{$host}";
 		
-		if ( $port > 0 && ( $scheme === 'http' && $port !== 80 ) || ( $scheme === 'https' && $port !== 443 ) )
+		if ($port > 0 && ($scheme === 'http' && $port !== 80) || ($scheme === 'https' && $port !== 443 ))
 		{
 			$retval .= ":{$port}";
 		}
 		
 		$retval .= $urlParts['path'];
 		
-		if ( !empty($urlParts['query']) )
+		if (!empty($urlParts['query']))
 		{
 			$retval .= "?{$urlParts['query']}";
 		}
@@ -624,10 +422,10 @@ class tweetOauth extends tweetConnection {
 	private function _signString($string)
 	{
 		$retval = FALSE;
-		switch ( $this->_signatureMethod )
+		switch ($this->_signatureMethod)
 		{
 			case 'HMAC-SHA1':
-				$key = $this->_encode_rfc3986($this->_getConsumerSecret()) . '&' . $this->_encode_rfc3986($this->_getAccessSecret());
+				$key = $this->_encode_rfc3986($this->_tokens['consumer_secret']) . '&' . $this->_encode_rfc3986($this->_tokens['access_secret']);
 				$retval = base64_encode(hash_hmac('sha1', $string, $key, true));
 			break;
 		}
