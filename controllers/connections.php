@@ -10,6 +10,11 @@ class Connections extends MY_Controller
         parent::__construct();
 		   
 		if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
+		if ((config_item('twitter_consumer_key') == '') AND (config_item('twitter_consumer_secret') == ''))
+		{
+		    $this->session->set_flashdata('message', 'The Twitter app needs Application Keys before it connect');
+			redirect(base_url().'settings/twitter');
+		}
 	
 		// Load Library
         $this->load->library('oauth');
