@@ -3,5 +3,4 @@
 	<?= navigation_list_btn('home/twitter/timeline', 'Friends') ?>
 	<?= navigation_list_btn('home/twitter/mentions', '@ Replies') ?>
 	<?= navigation_list_btn('home/twitter/favorites', 'Favorites') ?>
-	<?= navigation_list_btn('home/twitter/direct_messages', 'Direct Messages') ?>
 </ul>

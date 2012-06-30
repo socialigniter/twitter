@@ -6,12 +6,12 @@ class Home extends Dashboard_Controller
         parent::__construct();
         
         if (config_item('twitter_enabled') != 'TRUE') redirect(base_url());
-
-		$this->load->library('tweet');
 		   
 		$this->data['page_title'] 	= 'Twitter';
 
 		$this->check_connection = $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
+
+		$this->load->library('tweet', array('access_key' => $this->check_connection->auth_one, 'access_secret' => $this->check_connection->auth_two));
 	}
 	
 	function test()
@@ -29,9 +29,7 @@ class Home extends Dashboard_Controller
 	function timeline()
 	{
 		// No Connection
-		if (!$this->check_connection) redirect(base_url().'home/twitter/connect', 'refresh');
-
-		$this->tweet->set_tokens(array('oauth_token' => $this->check_connection->auth_one, 'oauth_token_secret' => $this->check_connection->auth_two));
+		if (!$this->check_connection) redirect(base_url().'settings/connections', 'refresh');
 
  		$timeline		= NULL;
 		$timeline_view	= NULL;
@@ -47,16 +45,16 @@ class Home extends Dashboard_Controller
 			$timeline 						= $this->tweet->call('get', 'statuses/mentions');
 	 	    $this->data['sub_title'] 		= "@ Replies";		
 		}
-		elseif ($this->uri->segment(3) == 'direct_messages')
-		{
-			$timeline 						= $this->tweet->call('get', 'direct_messages');
-	 	    $this->data['sub_title'] 		= "Direct Messages";		
-		}
 		elseif ($this->uri->segment(3) == 'favorites')		
 		{
 			$timeline 						= $this->tweet->call('get', 'favorites');
 	 	    $this->data['sub_title'] 		= "Favorites";		
 		}
+		else
+		{
+			$timeline = '';
+		}
+
 
 		// Build Feed				 			
 		if (!empty($timeline))
@@ -95,8 +93,6 @@ class Home extends Dashboard_Controller
 	 		$timeline_view = '<li><p>No tweets to show from anyone</p></li>';
  		}
  		
-	 	$this->data['social_post'] 		= $this->social_igniter->get_social_post($this->session->userdata('user_id'), 'social_post_horizontal'); 		
-		$this->data['status_updater']	= $this->load->view(config_item('dashboard_theme').'/partials/status_updater', $this->data, true);
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
 	}
