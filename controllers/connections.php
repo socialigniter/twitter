@@ -83,7 +83,7 @@ class Connections extends MY_Controller
 			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));	            
 			
 			// Get User Details
-			$twitter_user = $this->tweet->call('get', 'account/verify_credentials');
+			$twitter_user = $twitter->get_user_info($consumer, $tokens);
 			
 			// Already Connected
 			if ($check_connection)
@@ -133,8 +133,8 @@ class Connections extends MY_Controller
     	if ($this->session->userdata('signup_user_state') != 'has_connection_and_email') redirect('signup', 'refresh');
 
 		// User Info		
-		$twitter_image	= $this->session->userdata('profile_image_url');	
-		$username 		= $this->session->userdata('screen_name');
+		$twitter_image	= $this->session->userdata('image');	
+		$username 		= $this->session->userdata('nickname');
 		$email			= $this->session->userdata('signup_email');
 		$process_image  = FALSE;
 				
@@ -314,26 +314,30 @@ class Connections extends MY_Controller
 			$check_connection = $this->social_auth->check_connection_auth('twitter', $tokens->access_token, $tokens->secret);
 
 			// Load Tweet Library
-			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));	            
-			
+			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));
+
 			// Get User Details
-			$twitter_user = $this->tweet->call('get', 'account/verify_credentials');
+			$twitter_user = $twitter->get_user_info($consumer, $tokens);
+
+			//echo '<pre>';
+			//print_r($twitter_user);
+			//die();
 
 			if (connection_has_auth($check_connection))
-			{			
+			{
 				$this->session->set_flashdata('message', "You've already connected this Twitter account");
-				redirect('settings/connections', 'refresh');							
+				redirect('settings/connections', 'refresh');
 			}
 			else
 			{
-				// Add Connection	
+				// Add Connection
 	       		$connection_data = array(
 	       			'site_id'				=> $this->module_site->site_id,
 	       			'user_id'				=> $this->session->userdata('user_id'),
 	       			'module'				=> 'twitter',
 	       			'type'					=> 'primary',
-	       			'connection_user_id'	=> $twitter_user->id,
-	       			'connection_username'	=> $twitter_user->screen_name,
+	       			'connection_user_id'	=> $twitter_user['uid'],
+	       			'connection_username'	=> $twitter_user['nickname'],
 	       			'auth_one'				=> $tokens->access_token,
 	       			'auth_two'				=> $tokens->secret
 	       		);
