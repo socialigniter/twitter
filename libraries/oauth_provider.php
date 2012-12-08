@@ -37,17 +37,20 @@ class OAuth_Provider_Twitter extends OAuth_Provider {
 		
 		// Create a response from the request
 		return array(
-			'uid' => $token->uid,
-			'nickname' => $user->screen_name,
-			'name' => $user->name ?: $user->screen_name,
-			'location' => $user->location,
-			'image' => $user->profile_image_url,
-			'description' => $user->description,
+			'uid' 			=> $token->uid,
+			'nickname'		=> $user->screen_name,
+			'name'			=> $user->name ?: $user->screen_name,
+			'location'		=> $user->location,
+			'image'			=> $user->profile_image_url,
+			'description'	=> $user->description,
 			'urls' => array(
 			  'Website' => $user->url,
 			  'Twitter' => 'http://twitter.com/'.$user->screen_name,
 			),
 		);
 	}
+	
+	
+	
 
 } // End Provider_Twitter

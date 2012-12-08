@@ -11,26 +11,17 @@ class Home extends Dashboard_Controller
 
 		$this->check_connection = $this->social_auth->check_connection_user($this->session->userdata('user_id'), 'twitter', 'primary');
 
+		if (!$this->check_connection)
+		{
+			$this->session->set_flashdata('message', 'You need to "connect" a Twitter account before you can use that feature');			
+			redirect('/settings/connections');
+		}
+
 		$this->load->library('tweet', array('access_key' => $this->check_connection->auth_one, 'access_secret' => $this->check_connection->auth_two));
-	}
-	
-	function test()
-	{
-		echo '<h2>Testing</h2>';
-	
-		$user = $this->tweet->call('get', 'direct_messages', array('count' => 100));
-		
-		echo 'Count: '.count($user);
-		echo '<pre>';
-		print_r($user);
-	
 	}
 	
 	function timeline()
 	{
-		// No Connection
-		if (!$this->check_connection) redirect(base_url().'settings/connections', 'refresh');
-
  		$timeline		= NULL;
 		$timeline_view	= NULL;
 
@@ -95,12 +86,6 @@ class Home extends Dashboard_Controller
  		
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
-	}
-	
-	function connect()
-	{
- 	   	$this->data['sub_title'] = "Connect";
-		$this->render();
 	}
  
  	function post_to_social()
