@@ -49,8 +49,27 @@ class OAuth_Provider_Twitter extends OAuth_Provider {
 			),
 		);
 	}
-	
-	
+
+	public function post_status_update(OAuth_Consumer $consumer, OAuth_Token $token, $post_data)
+	{
+		// Merge Object Tokens & Data
+		$request_array = array_merge(array(
+			'oauth_consumer_key' 	=> $consumer->key,
+			'oauth_token' 			=> $token->access_token), 
+			$post_data
+		);
+
+		// Create a new POST request with the required parameters
+		$request = OAuth_Request::forge('resource', 'POST', 'https://api.twitter.com/1/statuses/update.json', $request_array);
+
+		// Sign the request using the consumer and token
+		$request->sign($this->signature, $consumer, $token);
+
+		$status_update = json_decode($request->execute());
+		
+		// Create a response from the request
+		return $status_update;
+	}	
 	
 
 } // End Provider_Twitter

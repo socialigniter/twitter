@@ -134,15 +134,43 @@ class Api extends Oauth_Controller
 		
         $this->response($message, 200);	        			
 	}
-	
+
 	function social_post_authd_post()
 	{
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
 			// Load Tweet Library
-			$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
+			//$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
 
-			$twitter_post = $this->tweet->call('post', 'statuses/update', array('status' => $this->input->post('content')));	
+			// Basic Content Redirect
+	        $this->load->library('oauth');
+
+	        // Create Consumer
+	        $consumer = $this->oauth->consumer(array(
+	            'key' 	 	=> config_item('twitter_consumer_key'),
+	            'secret' 	=> config_item('twitter_consumer_secret')
+	        ));
+
+	        // Load Provider
+	        $twitter = $this->oauth->provider('twitter');
+
+	        // Create Tokens
+			$tokens = OAuth_Token::forge('request', array(
+				'access_token' 	=> $connection->auth_one,
+				'secret' 		=> $connection->auth_two
+			));
+
+			/*	Twitter Status Post Data
+				There is lots more that can be added, so look up the official docs here
+				https://dev.twitter.com/docs/api/1/post/statuses/update
+			*/
+			$post_data = array(
+				'status'	=> $this->input->post('content'),
+				'lat'		=> $this->input->post('geo_lat'), 
+				'long'		=> $this->input->post('geo_lon')
+			);
+
+			$twitter_post = $twitter->post_status_update($consumer, $tokens, $post_data);
 
 			$message = array('status' => 'success', 'message' => 'Posted to Twitter successfully', 'data' => $twitter_post);
 		}

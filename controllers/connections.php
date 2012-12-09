@@ -319,10 +319,6 @@ class Connections extends MY_Controller
 			// Get User Details
 			$twitter_user = $twitter->get_user_info($consumer, $tokens);
 
-			//echo '<pre>';
-			//print_r($twitter_user);
-			//die();
-
 			if (connection_has_auth($check_connection))
 			{
 				$this->session->set_flashdata('message', "You've already connected this Twitter account");
