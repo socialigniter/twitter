@@ -167,12 +167,30 @@ class Api extends Oauth_Controller
 			$post_data = array(
 				'status'	=> $this->input->post('content'),
 				'lat'		=> $this->input->post('geo_lat'), 
-				'long'		=> $this->input->post('geo_lon')
+				'long'		=> $this->input->post('geo_lon'),
+				'include_entities'	=> TRUE
 			);
 
 			$twitter_post = $twitter->post_status_update($consumer, $tokens, $post_data);
 
-			$message = array('status' => 'success', 'message' => 'Posted to Twitter successfully', 'data' => $twitter_post);
+			if ($twitter_post)
+			{
+				// Add to Meta
+				$content_meta = array(
+					'site_id'		=> $this->module_site->site_id,
+					'content_id'	=> $this->input->post('content_id'),
+					'meta'			=> 'twitter_status_id',
+					'value'			=> $twitter_post->id
+				);
+				
+				$this->social_igniter->add_meta($content_meta);
+	
+				$message = array('status' => 'success', 'message' => 'Posted to Twitter successfully', 'data' => $twitter_post);
+			}
+			else
+			{
+				$message = array('status' => 'error', 'message' => 'Could not post message to Twitter', 'data' => $twitter_post);			
+			}
 		}
 		else
 		{
