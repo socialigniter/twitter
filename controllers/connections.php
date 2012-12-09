@@ -79,9 +79,6 @@ class Connections extends MY_Controller
 			// Check Connection
 			$check_connection = $this->social_auth->check_connection_auth('twitter', $tokens->access_token, $tokens->secret);
 
-			// Load Tweet Library
-			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));	            
-			
 			// Get User Details
 			$twitter_user = $twitter->get_user_info($consumer, $tokens);
 			
@@ -312,9 +309,6 @@ class Connections extends MY_Controller
 		
 			// Check Connection
 			$check_connection = $this->social_auth->check_connection_auth('twitter', $tokens->access_token, $tokens->secret);
-
-			// Load Tweet Library
-			$this->load->library('tweet', array('access_key' => $tokens->access_token, 'access_secret' => $tokens->secret));
 
 			// Get User Details
 			$twitter_user = $twitter->get_user_info($consumer, $tokens);
