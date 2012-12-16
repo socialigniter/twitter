@@ -1,0 +1,12 @@
+{
+	"app":"twitter",
+	"name":"Twitter",
+	"created":"2012-12-15",
+	"updated":"2012-12-15",
+	"creator":"Brennan Novak",
+	"category":"social",
+	"links":{
+		"default":"home/twitter/timeline"
+	},
+	"launcher":"yes"	
+}
