@@ -139,9 +139,6 @@ class Api extends Oauth_Controller
 	{
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
-			// Load Tweet Library
-			//$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
-
 			// Basic Content Redirect
 	        $this->load->library('oauth');
 
@@ -180,7 +177,7 @@ class Api extends Oauth_Controller
 					'site_id'		=> $this->module_site->site_id,
 					'content_id'	=> $this->input->post('content_id'),
 					'meta'			=> 'twitter_status_id',
-					'value'			=> $twitter_post->id
+					'value'			=> $twitter_post->id_str
 				);
 				
 				$this->social_igniter->add_meta($content_meta);
@@ -204,16 +201,13 @@ class Api extends Oauth_Controller
 	{
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
-			// Load Tweet Library
-			$this->load->library('tweet', array('access_key' => $connection->auth_one, 'access_secret' => $connection->auth_two));
-
 			$message_data = array(
 				'user_id'		=> $this->input->post('remote_user_id'),
 				'text'			=> $this->input->post('message'),
 				'wrap_links'	=> TRUE
 			);
 
-			$twitter_post = $this->tweet->call('post', 'direct_messages/new', $message_data);		
+			$twitter_post = $message_data;
 
 			$message = array('status' => 'success', 'message' => 'Message sent to Twitter', 'data' => $twitter_post);
 		}
