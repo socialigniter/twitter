@@ -16,12 +16,14 @@ class Home extends Dashboard_Controller
 			$this->session->set_flashdata('message', 'You need to "connect" a Twitter account before you can use that feature');			
 			redirect('/settings/connections');
 		}
-
-		$this->load->library('tweet', array('access_key' => $this->check_connection->auth_one, 'access_secret' => $this->check_connection->auth_two));
 	}
 	
 	function timeline()
 	{
+	
+		$this->load->library('tweet', array('access_key' => $this->check_connection->auth_one, 'access_secret' => $this->check_connection->auth_two));
+	
+	
  		$timeline		= NULL;
 		$timeline_view	= NULL;
 
@@ -86,18 +88,6 @@ class Home extends Dashboard_Controller
  		
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
-	}
- 
- 	function post_to_social()
- 	{
-	    if ((config_item('twitter_social_post') == 'TRUE') && ($this->input->post('post_to_twitter') == 1))
-    	{
-			if ($this->check_connection)
-			{
-				$auth 	= $this->twitter->oauth($this->config->item('twitter_consumer_key'), $this->config->item('twitter_consumer_key_secret'), $check_connection->token_one, $check_connection->token_two);									
-				$post	= $this->twitter->call('statuses/update', array('status' => $this->input->post('update')));
-			}
-    	}
 	}
 	
 }

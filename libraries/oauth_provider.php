@@ -3,7 +3,6 @@
 class OAuth_Provider_Twitter extends OAuth_Provider {
 
 	public $name = 'twitter';
-	
 	public $uid_key = 'user_id';
 
 	public function url_request_token()
