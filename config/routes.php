@@ -10,7 +10,6 @@
 * Standard installed routes for Twitter Module. 
 */
 $route['twitter'] 						= 'twitter';
-$route['twitter/home/timeline']			= 'home/timeline';
+$route['twitter/home/you']				= 'home/timeline';
 $route['twitter/home/mentions']			= 'home/timeline';
 $route['twitter/home/favorites']		= 'home/timeline';
-$route['twitter/home/direct_messages']	= 'home/timeline';

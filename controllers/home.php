@@ -16,38 +16,36 @@ class Home extends Dashboard_Controller
 			$this->session->set_flashdata('message', 'You need to "connect" a Twitter account before you can use that feature');			
 			redirect('/settings/connections');
 		}
+
+		$this->load->library('twitter_igniter', $this->check_connection);
+
 	}
 	
 	function timeline()
 	{
-	
-		$this->load->library('tweet', array('access_key' => $this->check_connection->auth_one, 'access_secret' => $this->check_connection->auth_two));
-	
-	
  		$timeline		= NULL;
 		$timeline_view	= NULL;
 
  		// Type of Feed
-		if ($this->uri->segment(3) == 'timeline')
+		if ($this->uri->segment(3) == 'you')
 		{
-			$timeline 						= $this->tweet->call('get', 'statuses/home_timeline'); 	   
+			$timeline 						= $this->twitter_igniter->get_user_timeline();	   
  	   		$this->data['sub_title'] 		= "Timeline";
  	   	}
 		elseif ($this->uri->segment(3) == 'mentions')
 		{
-			$timeline 						= $this->tweet->call('get', 'statuses/mentions');
-	 	    $this->data['sub_title'] 		= "@ Replies";		
+			$timeline 						= $this->twitter_igniter->get_mentions();
+	 	    $this->data['sub_title'] 		= "@ Mentions";		
 		}
 		elseif ($this->uri->segment(3) == 'favorites')		
 		{
-			$timeline 						= $this->tweet->call('get', 'favorites');
+			$timeline 						= $this->twitter_igniter->get_favorites();
 	 	    $this->data['sub_title'] 		= "Favorites";		
 		}
 		else
 		{
 			$timeline = '';
 		}
-
 
 		// Build Feed				 			
 		if (!empty($timeline))
@@ -62,23 +60,20 @@ class Home extends Dashboard_Controller
 				$this->data['item_user_id']			= $tweet->user->id;
 				$this->data['item_avatar']			= $tweet->user->profile_image_url;
 				$this->data['item_contributor']		= $tweet->user->name;
-				$this->data['item_profile']			= 'http://twitter.com/'.$tweet->user->screen_name;
+				$this->data['item_profile']			= 'https://twitter.com/'.$tweet->user->screen_name;
 				
 				// Activity
 				$this->data['item_content']			= item_linkify($tweet->text);
 				$this->data['item_content_id']		= $tweet->id;
-				$this->data['item_date']			= timezone_datetime_to_elapsed($tweet->created_at);			
+				$this->data['item_date']			= timezone_datetime_to_elapsed($tweet->created_at);	
+				$this->data['item_url']				= 'https://twitter.com/'.$tweet->user->screen_name.'/statuses/'.$tweet->id;	
 
 		 		// Actions
 			 	$this->data['item_comment']			= base_url().'comment/item/'.$tweet->id;
 			 	$this->data['item_comment_avatar']	= $this->data['logged_image'];
 			 	
-			 	$this->data['item_can_modify']		= FALSE; //$this->social_auth->has_access_to_modify('activity', $tweet, $this->session->userdata('user_id'), $this->session->userdata('user_level_id'));
-				$this->data['item_edit']			= ''; //base_url().'home/'.$tweet->module.'/manage/'.$tweet->content_id;
-				$this->data['item_delete']			= ''; //base_url().'api/activity/destroy/id/'.$tweet->activity_id;
-
 				// View
-				$timeline_view .= $this->load->view(config_item('dashboard_theme').'/partials/item_timeline.php', $this->data, true);
+				$timeline_view .= $this->load->view('partials/item_timeline.php', $this->data, true);
 	 		}
 	 	}
 	 	else
@@ -89,5 +84,4 @@ class Home extends Dashboard_Controller
 		$this->data['timeline_view'] 	= $timeline_view;				
 		$this->render();	
 	}
-	
 }
