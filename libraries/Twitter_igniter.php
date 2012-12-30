@@ -23,6 +23,7 @@ class Twitter_igniter
 
 		// Load Library
 		$this->ci->load->library('oauth');
+		$this->ci->load->library('curl');
 
         // Create Consumer
         $this->consumer = $this->ci->oauth->consumer(array(
@@ -59,6 +60,13 @@ class Twitter_igniter
 	function get_favorites()
 	{
 		return $this->twitter->get_favorites($this->consumer, $this->tokens, $this->request_array);	
+	}
+
+	function get_tweet($id)
+	{
+		$tweet = $this->ci->curl->simple_get(prep_url('https://api.twitter.com/1/statuses/show.json?id='.$id.'&include_entities=true'), array(CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1'));
+
+		return json_decode($tweet);	
 	}
 
 	function post_status_update($post_data)

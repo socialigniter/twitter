@@ -6,7 +6,7 @@
 	"creator":"Brennan Novak",
 	"category":"social",
 	"links":{
-		"default":"home/twitter/timeline"
+		"default":"home/twitter/you"
 	},
 	"launcher":"yes"	
 }

@@ -65,7 +65,7 @@ class Api extends Oauth_Controller
 		if ($connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary'))
 		{
 			// Load Libraries
-			$this->load->library('twitter_igniter', array('auth_one' => $connection->auth_one, 'auth_two' => $connection->auth_two));
+			$this->load->library('twitter_igniter', $connection);
 
 			/*	Twitter Status Post Data
 				There is lots more that can be added, so look up the official docs here
@@ -102,7 +102,19 @@ class Api extends Oauth_Controller
 			$message = array('status' => 'error', 'message' => 'No Twitter account for that user');			
 		}
 
-        $this->response($message, 200);	
+        $this->response($message, 200);
+	}
+	
+	function archive_tweet_authd_get()
+	{
+		$connection = $this->social_auth->check_connection_user($this->oauth_user_id, 'twitter', 'primary');
+
+		$this->load->library('twitter_igniter', $connection);
+
+		$tweet = $this->twitter_igniter->get_tweet($this->get('id'));
+
+		echo '<pre>';
+		print_r($tweet);
 	}
 	
 }

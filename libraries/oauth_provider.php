@@ -52,7 +52,6 @@ class OAuth_Provider_Twitter extends OAuth_Provider {
 	public function get_user_timeline(OAuth_Consumer $consumer, OAuth_Token $token, $request_array)
 	{
 		$request = OAuth_Request::forge('resource', 'GET', 'https://api.twitter.com/1/statuses/user_timeline.json', $request_array);
-
 		$request->sign($this->signature, $consumer, $token);
 		
 		return json_decode($request->execute());
@@ -61,7 +60,6 @@ class OAuth_Provider_Twitter extends OAuth_Provider {
 	public function get_mentions(OAuth_Consumer $consumer, OAuth_Token $token, $request_array)
 	{
 		$request = OAuth_Request::forge('resource', 'GET', 'https://api.twitter.com/1/statuses/mentions.json?include_entities=true', $request_array);
-
 		$request->sign($this->signature, $consumer, $token);
 		
 		return json_decode($request->execute());
@@ -70,11 +68,10 @@ class OAuth_Provider_Twitter extends OAuth_Provider {
 	public function get_favorites(OAuth_Consumer $consumer, OAuth_Token $token, $request_array)
 	{
 		$request = OAuth_Request::forge('resource', 'GET', 'https://api.twitter.com/1/favorites.json?count=20', $request_array);
-
 		$request->sign($this->signature, $consumer, $token);
 		
 		return json_decode($request->execute());
-	}	
+	}
 
 	public function post_status_update(OAuth_Consumer $consumer, OAuth_Token $token, $request_array)
 	{
