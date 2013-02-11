@@ -67,12 +67,22 @@ class Api extends Oauth_Controller
 			// Load Libraries
 			$this->load->library('twitter_igniter', $connection);
 
+			// Uses Short URL if exists						
+			if ($this->input->post('short_url'))
+			{
+				$post_url = $this->input->post('short_url');
+			}
+			else
+			{
+				$post_url = base_url().$this->input->post('module').'/view/'.$this->input->post('content_id');				
+			}
+
 			/*	Twitter Status Post Data
 				There is lots more that can be added, so look up the official docs here
 				https://dev.twitter.com/docs/api/1/post/statuses/update
 			*/
 			$post_data = array(
-				'status'	=> $this->input->post('content'),
+				'status'	=> truncator($this->input->post('content'), 140, $post_url, 20),
 				'lat'		=> $this->input->post('geo_lat'), 
 				'long'		=> $this->input->post('geo_lon'),
 				'include_entities'	=> TRUE
