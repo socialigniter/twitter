@@ -82,7 +82,7 @@ class Api extends Oauth_Controller
 				https://dev.twitter.com/docs/api/1/post/statuses/update
 			*/
 			$post_data = array(
-				'status'	=> truncator($this->input->post('content'), 140, $post_url, 20),
+				'status'	=> truncator($this->input->post('content'), 130, $post_url, 20),
 				'lat'		=> $this->input->post('geo_lat'), 
 				'long'		=> $this->input->post('geo_lon'),
 				'include_entities'	=> TRUE
