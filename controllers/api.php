@@ -68,14 +68,11 @@ class Api extends Oauth_Controller
 			$this->load->library('twitter_igniter', $connection);
 
 			// Uses Short URL if exists						
-			if ($this->input->post('short_url'))
-			{
+			if ($this->input->post('short_url')):
 				$post_url = $this->input->post('short_url');
-			}
-			else
-			{
-				$post_url = base_url().$this->input->post('module').'/view/'.$this->input->post('content_id');				
-			}
+			else:
+				$post_url = $this->input->post('long_url');				
+			endif;
 
 			/*	Twitter Status Post Data
 				There is lots more that can be added, so look up the official docs here
